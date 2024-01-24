@@ -82,21 +82,21 @@
         };
       }
 
-      onPush() {
-        this.ws.send('action:push');
-      }
-
-      onClear() {
-        this.ws.send('action:clear');
-      }
-
-      onReconnect() {
+      reconnectWS() {
         this.initTerminal();
 
         this.ws.close();
         this.connectWS();
 
         this.setNotice('');
+      }
+
+      push() {
+        this.ws.send('action:push');
+      }
+
+      clear() {
+        this.ws.send('action:clear');
       }
     }
 
@@ -128,17 +128,17 @@
 
     const $pushBtn =  document.getElementById('push');
     $pushBtn.onclick = () => {
-      terminalManager.onPush();
+      terminalManager.push();
     };
 
     const $clearBtn =  document.getElementById('clear');
     $clearBtn.onclick = () => {
-      terminalManager.onClear();
+      terminalManager.clear();
     };
 
     const $reconnectBtn =  document.getElementById('reconnect');
     $reconnectBtn.onclick = () => {
-      terminalManager.onReconnect();
+      terminalManager.reconnectWS();
     };
   </script>
 </body>
