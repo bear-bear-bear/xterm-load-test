@@ -34,6 +34,9 @@ wss.on('connection', (ws) => {
     ws.send(data);
   });
 
+  const sendNotice = (notice) => {
+    ws.send(`notice:${notice}`);
+  };
   ws.on('message', (msg) => {
     switch (msg.toString()) {
       case 'action:push': {
@@ -46,15 +49,14 @@ wss.on('connection', (ws) => {
         const id = setInterval(pushText, 2);
         intervalIds.push(id);
 
-        const notice = `Push Count: ${intervalIds.length}`;
-        ws.send(`notice:${notice}`);
+        sendNotice(`Push Count: ${intervalIds.length}`);
         break;
       }
       case 'action:clear': {
         clearIntervals();
         ptyProcess.write('clear\r');
 
-        ws.send(`notice:`);
+        sendNotice('');
         break;
       }
       default: {
