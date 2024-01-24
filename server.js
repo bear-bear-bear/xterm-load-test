@@ -18,7 +18,7 @@ const clearIntervals = () => {
   intervalIds.forEach(clearInterval);
   intervalIds = [];
 }
-const LONG_TEXT = Array.from({ length: 200000 }, () => 'PUSH PULL 두비두바').join(' ');
+const getLongText = () => Array.from({ length: 500 }, () => Math.random() * 100).join(' ');
 
 wss.on('connection', (ws) => {
   const ptyProcess = pty.spawn(process.platform === 'win32' ? 'powershell.exe' : 'bash', [], {
@@ -37,12 +37,12 @@ wss.on('connection', (ws) => {
     switch (msg.toString()) {
       case 'action:push': {
         const pushText = () => {
-          ws.send(LONG_TEXT);
+          ws.send(getLongText());
           ws.send('\r');
         };
 
         pushText();
-        const id = setInterval(pushText, 100);
+        const id = setInterval(pushText, 50);
         intervalIds.push(id);
 
         const notice = `Push Count: ${intervalIds.length}`;
