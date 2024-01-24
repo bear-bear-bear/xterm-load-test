@@ -50,6 +50,7 @@
 
     /* WS Connect */
     let ws;
+    const notice = document.getElementById('notice');
     const messageStore = new (
       /* 원형 버퍼 부하 테스트 */
       class MessageStore {
@@ -79,7 +80,6 @@
           ws.send(data);
         });
       };
-      const notice = document.getElementById('notice');
       ws.onmessage = ({ data }) => {
         if (data.startsWith('notice:')) {
           notice.textContent = data.replace('notice:', '');
@@ -106,6 +106,7 @@
       initTerminal();
       ws.close();
       connectWS();
+      notice.textContent = '';
     };
   </script>
 </body>

@@ -18,7 +18,7 @@ const clearIntervals = () => {
   intervalIds.forEach(clearInterval);
   intervalIds = [];
 }
-const getLongText = () => Array.from({ length: 500 }, () => Math.random() * 100).join(' ');
+const getLongText = () => Array.from({ length: 1000 }, () => Math.random() * 100).join(' ');
 
 wss.on('connection', (ws) => {
   const ptyProcess = pty.spawn(process.platform === 'win32' ? 'powershell.exe' : 'bash', [], {
@@ -42,7 +42,7 @@ wss.on('connection', (ws) => {
         };
 
         pushText();
-        const id = setInterval(pushText, 50);
+        const id = setInterval(pushText, 2);
         intervalIds.push(id);
 
         const notice = `Push Count: ${intervalIds.length}`;
