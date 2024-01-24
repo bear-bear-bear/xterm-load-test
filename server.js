@@ -48,15 +48,12 @@ wss.on('connection', (ws) => {
         pushText();
         const id = setInterval(pushText, 2);
         intervalIds.push(id);
-
         sendNotice(`Push Count: ${intervalIds.length}`);
         break;
       }
       case 'action:clear': {
         clearIntervals();
         ptyProcess.write('clear\r');
-
-        sendNotice('');
         break;
       }
       default: {

@@ -84,10 +84,8 @@
 
       reconnectWS() {
         this.initTerminal();
-
         this.ws.close();
         this.connectWS();
-
         this.setNotice('');
       }
 
@@ -97,6 +95,7 @@
 
       clear() {
         this.ws.send('action:clear');
+        this.setNotice('');
       }
     }
 
