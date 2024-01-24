@@ -50,6 +50,27 @@
 
     /* WS Connect */
     let ws;
+    const messageStore = new (
+      /* 원형 버퍼 부하 테스트 */
+      class MessageStore {
+        maxMessages = 1000;
+        _messages = [];
+        start = 0;
+        end = 0;
+        count = 0;
+
+        addMessage(message) {
+          this._messages[this.end] = message; // 메시지를 원형 버퍼의 끝 인덱스에 저장
+          this.end = (this.end + 1) % this.maxMessages; // 끝 인덱스 순환
+
+          if (this.count < this.maxMessages) {
+            this.count++;
+          } else {
+            this.start = (this.start + 1) % this.maxMessages; // 시작 인덱스 순환
+          }
+        }
+      }
+    )();
     const connectWS = () => {
       ws = new WebSocket(`ws://${location.host}`);
 
@@ -65,6 +86,7 @@
           return;
         }
         term.write(data);
+        messageStore.addMessage(data);
       };
       ws.onclose = () => {
         term.writeln('\r** Connection closed **');
@@ -84,7 +106,7 @@
       initTerminal();
       ws.close();
       connectWS();
-    }
+    };
   </script>
 </body>
 </html>
