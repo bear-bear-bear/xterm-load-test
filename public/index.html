@@ -35,78 +35,110 @@
 
   <div id="terminal"></div>
   <script>
-    /* Initialize terminal */
-    let term;
-    const initTerminal = () => {
-      if (term) term.dispose();
-      term = new Terminal({
-        cursorBlink: true,
-        cols: 80,
-        rows: 30,
-      });
-      term.open(document.getElementById('terminal'));
-    };
-    initTerminal();
+    class TerminalManager {
+      term;
+      ws;
 
-    /* WS Connect */
-    let ws;
-    const notice = document.getElementById('notice');
-    const messageStore = new (
-      /* 원형 버퍼 부하 테스트 */
-      class MessageStore {
-        maxMessages = 1000;
-        _messages = [];
-        start = 0;
-        end = 0;
-        count = 0;
+      constructor({ $terminal, $notice, messageStore = new MessageStore() }) {
+        this.$terminal = $terminal;
+        this.$notice = $notice;
+        this.messageStore = messageStore;
 
-        addMessage(message) {
-          this._messages[this.end] = message; // 메시지를 원형 버퍼의 끝 인덱스에 저장
-          this.end = (this.end + 1) % this.maxMessages; // 끝 인덱스 순환
+        this.initTerminal();
+        this.connectWS();
+      }
 
-          if (this.count < this.maxMessages) {
-            this.count++;
-          } else {
-            this.start = (this.start + 1) % this.maxMessages; // 시작 인덱스 순환
+      initTerminal() {
+        if (this.term) this.term.dispose();
+        this.term = new Terminal({
+          cursorBlink: true,
+          cols: 80,
+          rows: 30,
+        });
+        this.term.open(this.$terminal);
+      }
+
+      setNotice(message) {
+        this.$notice.textContent = message;
+      }
+
+      connectWS() {
+        this.ws = new WebSocket(`ws://${location.host}`);
+
+        this.ws.onopen = () => {
+          this.term.onData(data => {
+            this.ws.send(data);
+          });
+        };
+        this.ws.onmessage = ({ data }) => {
+          if (data.startsWith('notice:')) {
+            this.setNotice(data.replace('notice:', ''));
           }
+          this.term.write(data);
+          this.messageStore.addMessage(data);
+        };
+        this.ws.onclose = () => {
+          this.term.writeln('\r** Connection closed **');
+        };
+      }
+
+      onPush() {
+        this.ws.send('action:push');
+      }
+
+      onClear() {
+        this.ws.send('action:clear');
+      }
+
+      onReconnect() {
+        this.initTerminal();
+
+        this.ws.close();
+        this.connectWS();
+
+        this.setNotice('');
+      }
+    }
+
+    class MessageStore {
+      constructor() {
+        this.maxMessages = 1000;
+        this._messages = [];
+        this.start = 0;
+        this.end = 0;
+        this.count = 0;
+      }
+
+      addMessage(message) {
+        this._messages[this.end] = message;
+        this.end = (this.end + 1) % this.maxMessages;
+
+        if (this.count < this.maxMessages) {
+          this.count++;
+        } else {
+          this.start = (this.start + 1) % this.maxMessages;
         }
       }
-    )();
-    const connectWS = () => {
-      ws = new WebSocket(`ws://${location.host}`);
+    }
 
-      ws.onopen = () => {
-        term.onData(data => {
-          ws.send(data);
-        });
-      };
-      ws.onmessage = ({ data }) => {
-        if (data.startsWith('notice:')) {
-          notice.textContent = data.replace('notice:', '');
-          return;
-        }
-        term.write(data);
-        messageStore.addMessage(data);
-      };
-      ws.onclose = () => {
-        term.writeln('\r** Connection closed **');
-      };
+    const terminalManager = new TerminalManager({
+      $terminal: document.getElementById('terminal'),
+      $notice: document.getElementById('notice'),
+    });
+
+    const $pushBtn =  document.getElementById('push');
+    $pushBtn.onclick = () => {
+      terminalManager.onPush();
     };
-    connectWS();
 
-    /* Register button handlers */
-    const pushBtn = document.getElementById('push');
-    pushBtn.onclick = () => ws.send('action:push');
+    const $clearBtn =  document.getElementById('clear');
+    $clearBtn.onclick = () => {
+      terminalManager.onClear();
+    };
 
-    const clearBtn = document.getElementById('clear');
-    clearBtn.onclick = () => ws.send('action:clear');
-
-    const reconnectBtn = document.getElementById('reconnect');
-    reconnectBtn.onclick = () => {
-      initTerminal();
-      ws.close();
-      connectWS();
-      notice.textContent = '';
+    const $reconnectBtn =  document.getElementById('reconnect');
+    $reconnectBtn.onclick = () => {
+      terminalManager.onReconnect();
     };
   </script>
 </body>

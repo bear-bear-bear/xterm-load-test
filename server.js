@@ -11,13 +11,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} - http://localhost:${PORT}`);
 });
-
 const wss = new Server({ server });
+
 let intervalIds = [];
 const clearIntervals = () => {
   intervalIds.forEach(clearInterval);
   intervalIds = [];
 }
+
 const getLongText = () => Array.from({ length: 1000 }, () => Math.random() * 100).join(' ');
 
 wss.on('connection', (ws) => {
