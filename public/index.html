@@ -39,6 +39,15 @@
       term;
       ws;
 
+      converter = {
+        serialize: (data) => {
+          return JSON.stringify(data);
+        },
+        deserialize: (data) => {
+          return JSON.parse(data);
+        },
+      }
+
       constructor({ $terminal, $notice, messageStore = new MessageStore() }) {
         this.$terminal = $terminal;
         this.$notice = $notice;
@@ -62,20 +71,35 @@
         this.$notice.textContent = message;
       }
 
+      send(content, type = 'normal') {
+        // type - 'normal' | 'action'
+        this.ws.send(
+          this.converter.serialize({
+            type,
+            content,
+          })
+        );
+      }
+
       connectWS() {
         this.ws = new WebSocket(`ws://${location.host}`);
 
         this.ws.onopen = () => {
           this.term.onData(data => {
-            this.ws.send(data);
+            this.send(data);
           });
         };
         this.ws.onmessage = ({ data }) => {
-          if (data.startsWith('notice:')) {
-            this.setNotice(data.replace('notice:', ''));
+          // type - 'normal' | 'notice'
+          const { type, content } = this.converter.deserialize(data);
+
+          if (type === 'notice') {
+            this.setNotice(content);
+            return;
           }
-          this.term.write(data);
-          this.messageStore.addMessage(data);
+
+          this.term.write(content);
+          this.messageStore.addMessage(content);
         };
         this.ws.onclose = () => {
           this.term.writeln('\r** Connection closed **');
@@ -90,11 +114,11 @@
       }
 
       push() {
-        this.ws.send('action:push');
+        this.send('push', 'action');
       }
 
       clear() {
-        this.ws.send('action:clear');
+        this.send('clear', 'action');
         this.setNotice('');
       }
     }
