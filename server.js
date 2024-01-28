@@ -1,15 +1,15 @@
 const express = require('express');
 const { Server } = require('ws');
 const pty = require('node-pty');
-const path = require('path');
+const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+const PORT = 8000;
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors({ origin : true, credentials : true })); // 모든 요청에 대해 CORS를 활성화합니다.
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 const wss = new Server({ server });
 
@@ -31,6 +31,8 @@ const converter = {
 }
 
 wss.on('connection', (ws) => {
+  console.log('[Message] wss connected');
+
   const send = (content, type = 'normal') => {
     // type - 'normal' | 'notice'
     ws.send(converter.serialize({
@@ -75,6 +77,7 @@ wss.on('connection', (ws) => {
         case 'clear': {
           clearIntervals();
           ptyProcess.write('clear\r');
+          send('', 'notice');
           return;
         }
         default: {
@@ -87,7 +90,16 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
+    console.log('[Message] socket closed');
     clearIntervals();
     ptyProcess.kill();
   });
+});
+
+wss.on('error', (error) => {
+  console.error('[Message] wss error', error);
+});
+
+wss.on('error', (error) => {
+  console.error('[Message] wss error', error);
 });
