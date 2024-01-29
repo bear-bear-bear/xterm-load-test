@@ -1,6 +1,7 @@
 import {flow, types} from 'mobx-state-tree';
 import {MessageStoreModel} from '../../same-with-origin/MessageStore';
 import {createObjectModel} from '../../same-with-origin/Object';
+import SockJS from 'sockjs-client';
 
 const converter = {
   serialize: (data) => {
@@ -70,7 +71,8 @@ export const Session = types
   .actions(self => {
     const connect = flow(function* () {
       yield new Promise((resolve) => {
-        const ws = new WebSocket(`ws://localhost:8000`);
+        const ws = new SockJS(`http://localhost:8000/echo`);
+        ws.binaryType = 'arraybuffer';
 
         self.socketWrapper.setValue({
           socket: ws,

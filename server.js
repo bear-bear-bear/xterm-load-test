@@ -1,17 +1,23 @@
 const express = require('express');
-const { Server } = require('ws');
+const sockjs = require('sockjs');
+const http = require('http');
 const pty = require('node-pty');
 const cors = require('cors');
 
 const app = express();
 const PORT = 8000;
 
-app.use(cors({ origin : true, credentials : true })); // 모든 요청에 대해 CORS를 활성화합니다.
+// SockJS 서버 설정
+const echo = sockjs.createServer({ prefix: '/echo' });
 
-const server = app.listen(PORT, () => {
+app.use(cors({ origin: true, credentials: true })); // 모든 요청에 대해 CORS를 활성화합니다.
+
+const server = http.createServer(app);
+echo.installHandlers(server, { prefix: '/echo' });
+
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-const wss = new Server({ server });
 
 let intervalIds = [];
 const clearIntervals = () => {
@@ -30,12 +36,11 @@ const converter = {
   },
 }
 
-wss.on('connection', (ws) => {
-  console.log('[Message] wss connected');
+echo.on('connection', (conn) => {
+  console.log('[Message] sockjs connected');
 
   const send = (content, type = 'normal') => {
-    // type - 'normal' | 'notice'
-    ws.send(converter.serialize({
+    conn.write(converter.serialize({
       content,
       type,
     }));
@@ -53,8 +58,7 @@ wss.on('connection', (ws) => {
     send(data);
   });
 
-  ws.on('message', (message) => {
-    // type - 'normal' | 'action'
+  conn.on('data', (message) => {
     const { content, type } = converter.deserialize(message);
 
     if (type === 'action') {
@@ -87,21 +91,17 @@ wss.on('connection', (ws) => {
     }
 
     if (type === 'resize') {
-        const { cols, rows } = content;
-        ptyProcess.resize(cols, rows);
-        return;
+      const { cols, rows } = content;
+      ptyProcess.resize(cols, rows);
+      return;
     }
 
     ptyProcess.write(content);
   });
 
-  ws.on('close', () => {
-    console.log('[Message] socket closed');
+  conn.on('close', () => {
+    console.log('[Message] connection closed');
     clearIntervals();
     ptyProcess.kill();
   });
-});
-
-wss.on('error', (error) => {
-  console.error('[Message] wss error', error);
 });
