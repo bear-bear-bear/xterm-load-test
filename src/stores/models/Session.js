@@ -1,7 +1,6 @@
 import {flow, types} from 'mobx-state-tree';
 import {MessageStoreModel} from './MessageStore';
 import {createObjectModel} from './Object';
-import SockJS from 'sockjs-client';
 
 const converter = {
   serialize: (data) => {
