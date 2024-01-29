@@ -2,7 +2,7 @@ import React, {useContext} from 'react';
 import {MobXProviderContext, Observer} from 'mobx-react';
 
 import createServerStore from './ServerStore';
-import StorageSync from './@StorageSync';
+import StorageSync from '../same-with-origin/@StorageSync';
 
 export const serverStore = createServerStore();
 

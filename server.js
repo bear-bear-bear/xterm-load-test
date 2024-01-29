@@ -86,6 +86,12 @@ wss.on('connection', (ws) => {
       }
     }
 
+    if (type === 'resize') {
+        const { cols, rows } = content;
+        ptyProcess.resize(cols, rows);
+        return;
+    }
+
     ptyProcess.write(content);
   });
 
@@ -94,10 +100,6 @@ wss.on('connection', (ws) => {
     clearIntervals();
     ptyProcess.kill();
   });
-});
-
-wss.on('error', (error) => {
-  console.error('[Message] wss error', error);
 });
 
 wss.on('error', (error) => {

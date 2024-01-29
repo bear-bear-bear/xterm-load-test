@@ -1,6 +1,6 @@
 import {flow, types} from 'mobx-state-tree';
-import {MessageStoreModel} from './MessageStore';
-import {createObjectModel} from './Object';
+import {MessageStoreModel} from '../../same-with-origin/MessageStore';
+import {createObjectModel} from '../../same-with-origin/Object';
 
 const converter = {
   serialize: (data) => {
@@ -80,6 +80,7 @@ export const Session = types
           'open',
           () => {
             self.setConnected(true);
+            console.debug('SSH opened');
             resolve();
           },
           { once: true },
