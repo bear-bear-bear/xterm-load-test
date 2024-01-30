@@ -22,7 +22,7 @@ server.listen(PORT, () => {
 // 모든 연결을 추적하는 배열
 const connections = [];
 // 임의의 긴 텍스트 생성
-const getLongText = () => Array.from({ length: 1000 }, () => String.fromCharCode(Math.random() * 100)).join(' ');
+const getLongText = () => Array.from({ length: 2000 }, () => String.fromCharCode(Math.random() * 100)).join(' ');
 // push 액션 인터벌 목록
 let intervalIds = [];
 const clearIntervals = () => {
@@ -63,7 +63,7 @@ ptyProcess.on('data', (data) => {
 });
 
 echo.on('connection', (conn) => {
-  console.log('[Message] sockjs connected');
+  console.log('[Message] connection connected');
 
   connections.push(conn); // 새 연결을 배열에 추가
 
@@ -87,6 +87,7 @@ echo.on('connection', (conn) => {
         const id = setInterval(pushText, 2);
         intervalIds.push(id);
 
+        console.log('[Action] push');
         const noticeMsg = `Push Count: ${intervalIds.length}`;
         console.log(noticeMsg);
         send(noticeMsg, 'notice');
@@ -95,6 +96,7 @@ echo.on('connection', (conn) => {
       if (content === 'clear') {
         clearIntervals();
         ptyProcess.write('clear\r');
+        console.log('[Action] clear')
         send('', 'notice');
         return;
       }

@@ -18,6 +18,10 @@ export const ServerStore = types
     const init = () => {
         const session = Session.create();
         self._setSession(session);
+
+        window.addEventListener('beforeunload', () => {
+          session.socket?.close();
+        })
     };
 
     return {
