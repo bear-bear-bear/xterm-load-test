@@ -18,6 +18,7 @@ const Terminal = ({ session }) => {
   }, [session.socket]);
 
   const onDidMount = ({ terminal }) => {
+    console.log('onDidMount', session.messageStore.messages);
     terminal.write(session.messageStore.messages.join(''));
     if (sshAddon) {
       timeoutRef.current = setTimeout(() => {

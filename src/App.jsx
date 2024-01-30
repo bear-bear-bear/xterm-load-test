@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react';
 import {storeInit} from './stores';
 import {StoreProvider} from './stores';
-import Wrapper from './Wrapper';
+import Page from './Page';
 import './App.css';
 import 'xterm/css/xterm.css';
 
@@ -18,7 +18,7 @@ function App() {
   if (!ready) return <div>Loading...</div>;
   return (
     <StoreProvider>
-      <Wrapper />
+      <Page />
     </StoreProvider>
   );
 }

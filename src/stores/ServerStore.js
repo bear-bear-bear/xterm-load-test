@@ -3,25 +3,49 @@ import {types} from 'mobx-state-tree';
 
 export const ServerStore = types
   .model('ServerStore', {
-    session: types.optional(Session, {}),
+    sessions: types.optional(types.array(Session), []),
+    activatedSessionId: types.maybe(types.string),
   })
+  .views(self => ({
+    get activatedSession() {
+      return self.sessions.find((session) => session.id === self.activatedSessionId);
+    },
+  }))
   .actions(self => {
-    const _setSession = (session) => {
-      self.session = session;
+    const setActivatedSession = (id) => {
+      self.activatedSessionId = id;
+    };
+    const _pushSession = (v) => {
+      self.sessions.push(v);
     };
 
     return {
-      _setSession,
+      setActivatedSession,
+      _pushSession,
     };
   })
   .actions(self => {
-    const init = () => {
-        const session = Session.create();
-        self._setSession(session);
+    const addSession = async () => {
+      const session = Session.create({ id: Date.now().toString() });
+      await session.connect();
 
-        window.addEventListener('beforeunload', () => {
-          session.socket?.close();
-        })
+      self._pushSession(session);
+      self.setActivatedSession(session.id);
+    };
+
+    return {
+      addSession,
+    }
+  })
+  .actions(self => {
+    const init = async () => {
+        await self.addSession();
+
+        window.onbeforeunload = () => {
+          self.sessions.forEach((session) => {
+            session.socket?.close();
+          });
+        };
     };
 
     return {

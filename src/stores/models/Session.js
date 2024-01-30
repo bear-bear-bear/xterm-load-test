@@ -14,6 +14,7 @@ const converter = {
 
 export const Session = types
   .model('Session', {
+    id: types.identifier,
     messageStore: types.optional(MessageStoreModel, {}),
     socketWrapper: types.optional(createObjectModel(), {}),
     notice: types.optional(types.string, ''),
@@ -111,7 +112,7 @@ export const Session = types
       });
     });
 
-    const close = () => {
+    const dispose = () => {
       if (!self.socket) return;
       if ([WebSocket.CLOSING, WebSocket.CLOSED].includes(self.socket.readyState)) {
         return;
@@ -122,19 +123,6 @@ export const Session = types
 
     return {
       connect,
-      close,
-    };
-  })
-  .actions(self => {
-    const reconnect = flow(function* () {
-      yield new Promise((resolve) => {
-        self.setNotice('');
-        self.close();
-        self.connect().then(resolve);
-      });
-    });
-
-    return {
-      reconnect,
+      dispose,
     };
   });

@@ -21,8 +21,9 @@ server.listen(PORT, () => {
 
 // 모든 연결을 추적하는 배열
 const connections = [];
-// 임의의 긴 텍스트 생성
-const getLongText = () => Array.from({ length: 2000 }, () => String.fromCharCode(Math.random() * 100)).join(' ');
+const chars = '                         abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const getRandomChar = () => chars[Math.floor(Math.random() * chars.length)];
+const getLongText = () => Array.from({ length: 1000 }, getRandomChar).join('');
 // push 액션 인터벌 목록
 let intervalIds = [];
 const clearIntervals = () => {
@@ -63,9 +64,8 @@ ptyProcess.on('data', (data) => {
 });
 
 echo.on('connection', (conn) => {
-  console.log('[Message] connection connected');
-
   connections.push(conn); // 새 연결을 배열에 추가
+  console.log('[Message] some connection connected, current connections:', connections.length);
 
   conn.on('data', (message) => {
     const { content, type } = converter.deserialize(message);
@@ -106,7 +106,7 @@ echo.on('connection', (conn) => {
   });
 
   conn.on('close', () => {
-    console.log('[Message] connection closed');
+    console.log('[Message] some connection closed, current connections:', connections.length - 1);
     // 연결이 닫힐 때 해당 연결 제거
     const index = connections.indexOf(conn);
     if (index !== -1) {
